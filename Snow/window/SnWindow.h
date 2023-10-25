@@ -1,6 +1,7 @@
 #pragma once
 
 #include "window/light_Windows.h"
+#include "window/Keyboard.h"
 #include "error/SnException.h"
 
 // private singleton class, manages registration/cleanup of window class
@@ -49,10 +50,12 @@ private:
 	static LRESULT WINAPI HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 	static LRESULT WINAPI HandleMsgThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 	LRESULT HandleMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
+public:
+	Keyboard kbd{};
 private:
 	int _width;
 	int _height;
-	HWND _hWnd;
+	HWND _hWnd{};
 };
 
 // error exception helper macro

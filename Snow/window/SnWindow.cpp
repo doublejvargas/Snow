@@ -122,11 +122,34 @@ LRESULT SnWindow::HandleMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) n
 {
 	switch (msg)
 	{
+	// We don't destroy window here as we have a destructor to do so, so we destroy window at App-termination time (i.e., when SnWindow 
+	//  exits its scope in the app and is popped from stack), and not here. Otherwise, our destructor may give us an error by trying to destroy twice.
 	case WM_CLOSE:
-		PostQuitMessage(0);
-		// We don't destroy window here as we have a destructor to do so, so we destroy window at App-termination time (i.e., when SnWindow 
-		//  exits its scope in the app and is popped from stack), and not here. Otherwise, our destructor may give us an error by trying to destroy twice.
+		PostQuitMessage(0);	
 		return 0;
+	// clear keystate when window loses focus to prevent input getting stuck in the same state
+	case WM_KILLFOCUS:
+		kbd.ClearState();
+		break;
+	/*********** KEYBOARD MESSAGES ***************/
+	case WM_KEYDOWN: //intentional fall through to cover system keys
+	case WM_SYSKEYDOWN:
+		/*lParam is a 64bit int and bit sections contain different information. bit 30 contains info useful for auto repeat:
+		   it is 0 if the key is up before message is sent (i.e., first key press), or 1 if the key is down before message is sent (i.e., repeated key press).
+		   we mask the parameter (bitwise &) to isolate 30th bit and perform checks to filter autorepeat */
+		if (!(lParam & 0x40000000) || kbd.AutorepeatIsEnabled())
+		{
+			kbd.OnKeyPressed(static_cast<unsigned char>(wParam));
+			break;
+		}
+	case WM_KEYUP: 
+	case WM_SYSKEYUP:
+		kbd.OnKeyReleased(static_cast<unsigned char>(wParam));
+		break;
+	case WM_CHAR:
+		kbd.OnChar(static_cast<unsigned char>(wParam));
+		break;
+	/*********** END KEYBOARD MESSAGES ***************/
 	}
 
 	return DefWindowProc(hWnd, msg, wParam, lParam);
