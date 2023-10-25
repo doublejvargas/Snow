@@ -1,5 +1,6 @@
 #include <window/light_Windows.h>
 #include "window/SnWindow.h"
+#include "error/SnException.h"
 
 int CALLBACK WinMain(
 	HINSTANCE hInstance,
@@ -7,20 +8,35 @@ int CALLBACK WinMain(
 	LPSTR	  lpCmdLine,
 	int		  nCmdShow )
 {
-	sn::SnWindow wnd(800, 300, L"Hello, Snow!");
-	sn::SnWindow wnd2(200, 650, L"Lollll");
-	
-	// event-based message loop to draw the window
-	MSG msg;
-	BOOL gResult;
-	while ((gResult = GetMessage(&msg, nullptr, 0, 0)) > 0) // nullptr tells win32 api we want messages from the thread (i.e, all windows)
+	try
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		SnWindow wnd(800, 300, L"Hello, Snow!");
+		// event-based message loop to draw the window
+		MSG msg;
+		BOOL gResult;
+		while ((gResult = GetMessage(&msg, nullptr, 0, 0)) > 0) // nullptr tells win32 api we want messages from the app threads (i.e, all windows)
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		if (gResult == -1)
+			return -1;
+		else
+			return msg.wParam;
+	}
+	catch (const SnException& e)
+	{
+		MessageBoxA(nullptr, e.what(), e.GetType(), MB_OK | MB_ICONEXCLAMATION);
+	}
+	catch (const std::exception& e)
+	{
+		MessageBoxA(nullptr, e.what(), "Standard Exception", MB_OK | MB_ICONEXCLAMATION);
+	}
+	catch (...)
+	{
+		MessageBoxA(nullptr, "No details available", "Unknown Exception", MB_OK | MB_ICONEXCLAMATION);
 	}
 
-	if (gResult == -1)
-		return -1;
-	else
-		return msg.wParam;
+	return -1;
 }

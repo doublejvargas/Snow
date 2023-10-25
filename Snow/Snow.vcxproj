@@ -145,12 +145,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="error\SnException.cpp" />
     <ClCompile Include="window\SnWindow.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="error\SnException.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="window\SnWindow.h" />
     <ClInclude Include="window\light_Windows.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Snow.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\icons\snow.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
