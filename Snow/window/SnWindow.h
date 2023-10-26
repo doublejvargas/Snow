@@ -5,6 +5,9 @@
 #include "window/Mouse.h"
 #include "error/SnException.h"
 
+// std
+#include <optional>
+
 // private singleton class, manages registration/cleanup of window class
 class SnWindow
 {
@@ -49,6 +52,7 @@ public:
 	SnWindow &operator=(const SnWindow &) = delete;
 
 	void SetTitle(LPCWSTR title);
+	static std::optional<int> ProcessMessages();
 private:
 	static LRESULT WINAPI HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 	static LRESULT WINAPI HandleMsgThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;

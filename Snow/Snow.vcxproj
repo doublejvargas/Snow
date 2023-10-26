@@ -145,15 +145,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="App.cpp" />
     <ClCompile Include="error\SnException.cpp" />
+    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="window\Keyboard.cpp" />
     <ClCompile Include="window\Mouse.cpp" />
     <ClCompile Include="window\SnWindow.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="App.h" />
     <ClInclude Include="error\SnException.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="window\Keyboard.h" />
     <ClInclude Include="window\Mouse.h" />
     <ClInclude Include="window\SnWindow.h" />

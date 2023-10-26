@@ -95,6 +95,26 @@ void SnWindow::SetTitle(LPCWSTR title)
 	}
 }
 
+std::optional<int> SnWindow::ProcessMessages()
+{
+	MSG msg;
+	// while queue has messages, remove and dispatch them (but do not block the app)
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		// check for quit because PeekMessage does not signal this via return
+		if (msg.message == WM_QUIT)
+			// return optional wrapping int (arg to PostQuitMessage is in wParam)
+			return static_cast<int>(msg.wParam);
+		
+		// TranslateMessage will post auxiliary WM_CHAR messages from key msgs
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	
+	// return empty optional when not quitting app
+	return {};
+}
+
 LRESULT WINAPI SnWindow::HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
 {
 	// use create parameter passed in from CreateWindowEx() to store class pointer
