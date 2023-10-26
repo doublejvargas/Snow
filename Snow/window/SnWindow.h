@@ -2,6 +2,7 @@
 
 #include "window/light_Windows.h"
 #include "window/Keyboard.h"
+#include "window/Mouse.h"
 #include "error/SnException.h"
 
 // private singleton class, manages registration/cleanup of window class
@@ -46,12 +47,15 @@ public:
 	// Delete copy constructor & operator
 	SnWindow(const SnWindow &) = delete;
 	SnWindow &operator=(const SnWindow &) = delete;
+
+	void SetTitle(LPCWSTR title);
 private:
 	static LRESULT WINAPI HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 	static LRESULT WINAPI HandleMsgThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 	LRESULT HandleMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 public:
 	Keyboard kbd{};
+	Mouse mouse{};
 private:
 	int _width;
 	int _height;

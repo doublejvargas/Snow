@@ -2,6 +2,9 @@
 #include "window/SnWindow.h"
 #include "error/SnException.h"
 
+//std
+#include <sstream>
+
 int CALLBACK WinMain(
 	HINSTANCE hInstance,
 	HINSTANCE hPrevIsntance,
@@ -18,9 +21,35 @@ int CALLBACK WinMain(
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-			if (wnd.kbd.KeyIsPressed(VK_MENU))
+			
+			// test code
+			static int i = 0;
+			while (!wnd.mouse.IsEmpty())
 			{
-				MessageBox(nullptr, L"Something happen!", L"Space key was pressed", MB_OK | MB_ICONEXCLAMATION);
+				const auto e = wnd.mouse.Read();
+				switch (e.GetType())
+				{
+				case Mouse::Event::Type::WheelUp:
+					i++;
+					{
+						std::ostringstream oss;
+						oss << "Up: " << i;
+						std::string s = oss.str();
+						std::wstring ws(s.begin(), s.end());
+						wnd.SetTitle(ws.c_str());
+					}
+					break;
+				case Mouse::Event::Type::WheelDown:
+					i--;
+					{
+						std::ostringstream oss;
+						oss << "Down: " << i;
+						std::string s = oss.str();
+						std::wstring ws(s.begin(), s.end());
+						wnd.SetTitle(ws.c_str());
+					}
+					break;
+				}
 			}
 		}
 
