@@ -78,8 +78,11 @@ SnWindow::SnWindow(int width, int height, LPCWSTR name)
 	{
 		throw SNHWND_LAST_EXCEPT();
 	}
-	// show window
+
+	// newly created windows start off as hidden
 	ShowWindow(_hWnd, SW_SHOWNORMAL);
+	// create graphics object
+	_pGfx = std::make_unique<SnGraphics>(_hWnd);
 }
 
 SnWindow::~SnWindow()
@@ -113,6 +116,11 @@ std::optional<int> SnWindow::ProcessMessages()
 	
 	// return empty optional when not quitting app
 	return {};
+}
+
+SnGraphics& SnWindow::Gfx()
+{
+	return *_pGfx;
 }
 
 LRESULT WINAPI SnWindow::HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept

@@ -4,9 +4,11 @@
 #include "window/Keyboard.h"
 #include "window/Mouse.h"
 #include "error/SnException.h"
+#include "graphics/SnGraphics.h"
 
 // std
 #include <optional>
+#include <memory>
 
 // private singleton class, manages registration/cleanup of window class
 class SnWindow
@@ -53,6 +55,8 @@ public:
 
 	void SetTitle(LPCWSTR title);
 	static std::optional<int> ProcessMessages();
+
+	SnGraphics& Gfx();
 private:
 	static LRESULT WINAPI HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 	static LRESULT WINAPI HandleMsgThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
@@ -64,6 +68,7 @@ private:
 	int _width;
 	int _height;
 	HWND _hWnd{};
+	std::unique_ptr<SnGraphics> _pGfx;
 };
 
 // error exception helper macro

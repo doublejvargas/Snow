@@ -21,11 +21,8 @@ int App::Go()
 
 void App::OnTick()
 {
-	const float t = _timer.Peek();
-	std::ostringstream oss;
-	oss << "Time elapsed: " << std::setprecision(1) << std::fixed << t << "s";
-	std::string s = oss.str();
-	std::wstring ws = std::wstring(s.begin(), s.end());
-	_wnd.SetTitle(ws.c_str());
+	const float c = sin(_timer.Peek()) / 2.f + .5f;
+	_wnd.Gfx().ClearBuffer(c, c, 1.f); //sin wave to animate ClearBuffer: oscillates from RGB white (1, 1, 1) to blue (0, 0, 1)
+	_wnd.Gfx().EndFrame();
 }
 
