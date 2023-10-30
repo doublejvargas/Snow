@@ -120,6 +120,11 @@ std::optional<int> SnWindow::ProcessMessages()
 
 SnGraphics& SnWindow::Gfx()
 {
+	if (!_pGfx)
+	{
+		throw SNHWND_LAST_EXCEPT();
+	}
+	
 	return *_pGfx;
 }
 
@@ -257,51 +262,60 @@ LRESULT SnWindow::HandleMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) n
 }
 
 // SnWindow inner exception class
-SnWindow::Exception::Exception(int line, const char* file, HRESULT hr)
-	: SnException(line, file), _hr{hr} {}
-
-const char* SnWindow::Exception::what() const noexcept
-{
-	std::ostringstream oss;
-	oss << GetType() << std::endl
-		<< "[Error Code] " << GetErrorCode() << std::endl
-		<< "[Description] " << GetErrorString() << "\n\n"
-		<< GetOriginString();
-	_whatBuffer = oss.str();
-	return _whatBuffer.c_str();
-}
-
-const char* SnWindow::Exception::GetType() const noexcept
-{
-	return "SnWindow Exception";
-}
-
 std::string SnWindow::Exception::TranslateErrorCode(HRESULT hr) noexcept
 {
 	char* pMsgBuf = nullptr;
-	DWORD nMsgLen = FormatMessageA(
+	// windows will allocate memory for err string and make our pointer point to it
+	const DWORD nMsgLen = FormatMessageA(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 		nullptr,
 		hr,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		reinterpret_cast<LPSTR>(&pMsgBuf),
 		0,
-		nullptr);
-	
+		nullptr
+	);
+	// 0 string length returned indicates a failure
 	if (nMsgLen == 0)
 		return "Unidentified error code";
-	
-	std::string error = pMsgBuf;
+	// copy error string from windows-allocated buffer to std::string
+	std::string errorString = pMsgBuf;
+	// free windows buffer
 	LocalFree(pMsgBuf);
-	return error;
+	return errorString;
 }
 
-HRESULT SnWindow::Exception::GetErrorCode() const noexcept
+SnWindow::HrException::HrException(int line, const char* file, HRESULT hr) noexcept
+	: Exception(line, file), _hr{hr}
+{}
+
+const char* SnWindow::HrException::what() const noexcept
+{
+	std::ostringstream oss;
+	oss << GetType() << std::endl
+		<< "[Error Code] " << GetErrorCode() << std::endl
+		<< "[Description] " << GetErrorDescription() << "\n\n"
+		<< GetOriginString();
+	_whatBuffer = oss.str();
+	return _whatBuffer.c_str();
+}
+
+const char* SnWindow::HrException::GetType() const noexcept
+{
+	return "SnWindow Exception";
+}
+
+HRESULT SnWindow::HrException::GetErrorCode() const noexcept
 {
 	return _hr;
 }
 
-std::string SnWindow::Exception::GetErrorString() const noexcept
+std::string SnWindow::HrException::GetErrorDescription() const noexcept
 {
 	return TranslateErrorCode(_hr);
+}
+
+const char* SnWindow::NoGfxException::GetType() const noexcept
+{
+	return "SnWindow Exception [No Graphics]";
 }

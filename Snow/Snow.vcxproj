@@ -146,9 +146,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="error\DxgiInfoManager.cpp" />
     <ClCompile Include="error\SnException.cpp" />
     <ClCompile Include="graphics\SnGraphics.cpp" />
     <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="vendor\dxerr\dxerr.cpp" />
     <ClCompile Include="window\Keyboard.cpp" />
     <ClCompile Include="window\Mouse.cpp" />
     <ClCompile Include="window\SnWindow.cpp" />
@@ -156,10 +158,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="error\DxgiInfoManager.h" />
     <ClInclude Include="error\SnException.h" />
     <ClInclude Include="graphics\SnGraphics.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="vendor\dxerr\dxerr.h" />
     <ClInclude Include="window\Keyboard.h" />
     <ClInclude Include="window\Mouse.h" />
     <ClInclude Include="window\SnWindow.h" />
@@ -170,6 +174,11 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\icons\snow.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vendor\dxerr\DXGetErrorDescription.inl" />
+    <None Include="vendor\dxerr\DXGetErrorString.inl" />
+    <None Include="vendor\dxerr\DXTrace.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

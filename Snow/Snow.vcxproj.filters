@@ -39,6 +39,12 @@
     <ClCompile Include="graphics\SnGraphics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vendor\dxerr\dxerr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="error\DxgiInfoManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="window\light_Windows.h">
@@ -68,6 +74,12 @@
     <ClInclude Include="graphics\SnGraphics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vendor\dxerr\dxerr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="error\DxgiInfoManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Snow.rc">
@@ -78,5 +90,16 @@
     <Image Include="res\icons\snow.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vendor\dxerr\DXTrace.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="vendor\dxerr\DXGetErrorString.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="vendor\dxerr\DXGetErrorDescription.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
