@@ -6,6 +6,7 @@
 
 // lib
 #include <d3d11.h>
+#include <wrl.h>
 
 // std
 #include <vector>
@@ -22,8 +23,8 @@ public:
 	{
 	public:
 		HrException(int line, const char* file, HRESULT hr, std::vector<std::string> infoMsgs = {}) noexcept;
-		const char* what() const noexcept override;
-		const char* GetType() const noexcept override;
+		const char* what() const noexcept override;			// overriding the std::exception method
+		const char* GetType() const noexcept override;		// overriding the SnException::GetType() method
 		HRESULT GetErrorCode() const noexcept;
 		std::string GetErrorString() const noexcept;
 		std::string GetErrorDescription() const noexcept;
@@ -47,7 +48,7 @@ public:
 	// delete copy and assignment constructor/operator
 	SnGraphics(const SnGraphics&) = delete;
 	SnGraphics& operator=(const SnGraphics&) = delete;
-	~SnGraphics();
+	~SnGraphics() = default;
 	
 	void EndFrame();
 	void ClearBuffer(float red, float green, float blue) noexcept;
@@ -55,8 +56,9 @@ private:
 #ifndef NDEBUG
 	DxgiInfoManager _infoManager{};
 #endif
-	ID3D11Device* _pDevice = nullptr;
-	IDXGISwapChain* _pSwap = nullptr;
-	ID3D11DeviceContext* _pContext = nullptr;
-	ID3D11RenderTargetView* _pTargetView = nullptr;
+	// COM smart pointers will improve garbage collection over manual Release() calls
+	Microsoft::WRL::ComPtr<ID3D11Device> _pDevice;
+	Microsoft::WRL::ComPtr<IDXGISwapChain> _pSwap;
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> _pContext;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> _pTargetView;
 };

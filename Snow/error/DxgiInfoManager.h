@@ -1,5 +1,9 @@
 #pragma once
 
+//lib
+#include <wrl.h>
+#include <dxgidebug.h>
+
 //std
 #include <string>
 #include <vector>
@@ -8,7 +12,7 @@ class DxgiInfoManager
 {
 public:
 	DxgiInfoManager();
-	~DxgiInfoManager();
+	~DxgiInfoManager() = default;
 	DxgiInfoManager(const DxgiInfoManager&) = delete;
 	DxgiInfoManager& operator=(const DxgiInfoManager&) = delete;
 	void Set() noexcept;
@@ -16,5 +20,5 @@ public:
 
 private:
 	unsigned long long _next = 0u;
-	struct IDXGIInfoQueue* _pDxgiInfoQueue = nullptr;
+	Microsoft::WRL::ComPtr<IDXGIInfoQueue> _pDxgiInfoQueue;
 };

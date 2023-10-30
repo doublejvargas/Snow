@@ -33,15 +33,7 @@ DxgiInfoManager::DxgiInfoManager()
 	}
 
 	HRESULT hr;
-	GFX_THROW_NOINFO(DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), reinterpret_cast<void**>(&_pDxgiInfoQueue)));
-}
-
-DxgiInfoManager::~DxgiInfoManager()
-{
-	if (_pDxgiInfoQueue != nullptr)
-	{
-		_pDxgiInfoQueue->Release();
-	}
+	GFX_THROW_NOINFO(DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), &_pDxgiInfoQueue));
 }
 
 void DxgiInfoManager::Set() noexcept

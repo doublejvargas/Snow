@@ -6,18 +6,20 @@
 // std
 #include <sstream>
 
+namespace wrl = Microsoft::WRL;
+
 #pragma comment(lib, "d3d11.lib") // tell the linker which dll to link against
 
 // graphics exception checking/throwing macros (some with DXGI infos)
 #define GFX_EXCEPT_NOINFO(hr) SnGraphics::HrException(__LINE__, __FILE__, (hr))
-#define GFX_THROW_NOINFO(hrcall) if (FAILED(hr = (hrcall))) throw SnGraphics::HrException(__LINE__, __FILE__, hr)
+#define GFX_THROW_NOINFO(hrcall) if (FAILED(hr = (hrcall))) throw GFX_EXCEPT_NOINFO(hr)
 
 #ifndef NDEBUG
 #define GFX_EXCEPT(hr) SnGraphics::HrException(__LINE__, __FILE__, (hr), _infoManager.GetMessages())
 #define GFX_THROW_INFO(hrcall) _infoManager.Set(); if(FAILED(hr = (hrcall))) throw GFX_EXCEPT(hr)
 #define GFX_DEVICE_REMOVED_EXCEPT(hr) SnGraphics::DeviceRemovedException(__LINE__, __FILE__, (hr), _infoManager.GetMessages())
 #else
-#define GFX_EXCEPT(hr) SnGraphics::HrException(__LINE__, __FILE__, (hr))
+#define GFX_EXCEPT(hr) GFX_EXCEPT_NOINFO(hr)
 #define GFX_THROW_INFO(hrcall) GFX_THROW_NOINFO(hrcall)
 #define GFX_DEVICE_REMOVED_EXCEPT(hr) SnGraphics::DeviceRemovedException(__LINE__, __FILE__, (hr))
 #endif
@@ -65,39 +67,24 @@ SnGraphics::SnGraphics(HWND hWnd)
 		&_pSwap,						// pointer to be filled w swap chain ("pp" -> pointer to pointer)
 		&_pDevice,						// pointer to be filled w device
 		nullptr,						// pointer to be filled w secured feature level
+		/* the & operator is overloaded for ComPtrs and it is equivalent to calling the ReleaseAndGetAddressOf() method
+		meaning, that calling & on a ComPtr will release any references that the ptr may hold. Be careful!
+		in order to get the address [address of ComPtr itself], use the GetAddressOf() method. Here, it makes sense for us to use & as
+		we're passing these pointers to fill them in, so it is good to release their contents, if any, first. */
 		&_pContext						// pointer to be filled w context
 	));
 
 	// gain access to texture subresource in swap chain (back buffer)
-	ID3D11Resource* pBackBuffer = nullptr; // temp!
-	GFX_THROW_INFO(_pSwap->GetBuffer(0, __uuidof(ID3D11Resource), reinterpret_cast<void**>(&pBackBuffer)));
+	wrl::ComPtr<ID3D11Resource> pBackBuffer; // temp!
+	GFX_THROW_INFO(_pSwap->GetBuffer(0, __uuidof(ID3D11Resource), &pBackBuffer));
 	GFX_THROW_INFO(_pDevice->CreateRenderTargetView(
-		pBackBuffer,		// resource or texture (inside swap chain)
-		nullptr,			// descriptor for additional configs
-		&_pTargetView		// pp that will be filled with handle to target view
+		// Get() returns the underlying [raw] ptr address (not the smart ptr address)
+		pBackBuffer.Get(),		// resource or texture (inside swap chain)
+		nullptr,				// descriptor for additional configs
+		&_pTargetView			// pp that will be filled with handle to target view
 	));
-	pBackBuffer->Release();
-}
-
-SnGraphics::~SnGraphics()
-{
 	
-	if (_pTargetView != nullptr)
-	{
-		_pTargetView->Release();
-	}
-	if (_pContext != nullptr)
-	{
-		_pContext->Release();
-	}
-	if (_pSwap != nullptr)
-	{
-		_pSwap->Release();
-	}
-	if (_pDevice != nullptr)
-	{
-		_pDevice->Release();
-	}
+	// when program exits the scope of this function, pBackBuffer is automatically deleted
 }
 
 void SnGraphics::EndFrame()
@@ -118,7 +105,7 @@ void SnGraphics::EndFrame()
 void SnGraphics::ClearBuffer(float red, float green, float blue) noexcept
 {
 	const float color[] = { red, green, blue, 1.0f };
-	_pContext->ClearRenderTargetView(_pTargetView, color);
+	_pContext->ClearRenderTargetView(_pTargetView.Get(), color);
 }
 
 // Graphics exception stuff
