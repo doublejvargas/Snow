@@ -2,13 +2,15 @@
 
 //lib
 #include "vendor/dxerr/dxerr.h"
+#include <d3dcompiler.h>
 
 // std
 #include <sstream>
 
 namespace wrl = Microsoft::WRL;
 
-#pragma comment(lib, "d3d11.lib") // tell the linker which dll to link against
+#pragma comment(lib, "d3d11.lib") // tell the linker which dll to link against for d3d stuff
+#pragma comment(lib, "D3DCompiler.lib") // used to compile HLSL shaders at runtime, but we'll use it to access shader loading functions 
 
 // graphics exception checking/throwing macros (some with DXGI infos)
 #define GFX_EXCEPT_NOINFO(hr) SnGraphics::HrException(__LINE__, __FILE__, (hr))
@@ -18,10 +20,12 @@ namespace wrl = Microsoft::WRL;
 #define GFX_EXCEPT(hr) SnGraphics::HrException(__LINE__, __FILE__, (hr), _infoManager.GetMessages())
 #define GFX_THROW_INFO(hrcall) _infoManager.Set(); if(FAILED(hr = (hrcall))) throw GFX_EXCEPT(hr)
 #define GFX_DEVICE_REMOVED_EXCEPT(hr) SnGraphics::DeviceRemovedException(__LINE__, __FILE__, (hr), _infoManager.GetMessages())
+#define GFX_THROW_INFO_ONLY(call) _infoManager.Set(); (call); {auto v = _infoManager.GetMessages(); if(!v.empty()) {throw SnGraphics::InfoException(__LINE__, __FILE__, v);}}
 #else
 #define GFX_EXCEPT(hr) GFX_EXCEPT_NOINFO(hr)
 #define GFX_THROW_INFO(hrcall) GFX_THROW_NOINFO(hrcall)
 #define GFX_DEVICE_REMOVED_EXCEPT(hr) SnGraphics::DeviceRemovedException(__LINE__, __FILE__, (hr))
+#define GFX_THROW_INFO_ONLY(call) (call)
 #endif
 
 
@@ -108,6 +112,62 @@ void SnGraphics::ClearBuffer(float red, float green, float blue) noexcept
 	_pContext->ClearRenderTargetView(_pTargetView.Get(), color);
 }
 
+void SnGraphics::DrawTestTriangle()
+{
+	HRESULT hr;
+	namespace wrl = Microsoft::WRL;
+	// struct that represents a vertex that only contains positions
+	struct Vertex
+	{
+		float x;
+		float y;
+	};
+	
+	// vertex positions data "subresource data" (2d triangle at center of screen)
+	const Vertex vertices[] = {
+		{0.f,   .5f},
+		{.5f,  -.5f},
+		{-.5f, -.5f}
+
+	};
+
+	// COM object that represents our vertex buffer
+	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
+	// descriptor provides specifications for this buffer
+	D3D11_BUFFER_DESC bd{};
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.MiscFlags = 0u;
+	bd.ByteWidth = sizeof(vertices);
+	bd.StructureByteStride = sizeof(Vertex);
+	
+	// another descriptor that intakes the vertex data (in this case, positions)
+	D3D11_SUBRESOURCE_DATA sd{};
+	sd.pSysMem = vertices;
+	
+	// the device allocates the resources, so we use it to create the buffer on the GPU side
+	GFX_THROW_INFO(_pDevice->CreateBuffer(&bd, &sd, &pVertexBuffer)); // don't forget to check for exceptions here
+	
+	// the context handles the operations/function calls that we will make on the graphics pipeline
+	// here we bind the vertex buffer to the pipeline
+	const UINT stride = sizeof(Vertex);
+	const UINT offset = 0u;
+	_pContext->IASetVertexBuffers(0u, 1u, &pVertexBuffer, &stride, &offset);
+
+	// create vertex shader
+	wrl::ComPtr<ID3D11VertexShader> pVertexShader;
+	wrl::ComPtr<ID3DBlob> pBlob;
+	GFX_THROW_INFO(D3DReadFileToBlob(L"VertexShader.cso", &pBlob));
+	// parameters: const void* pShaderByteCode, size_t byteCodeLength, id3d11classlinkage pClassLinkage, pp to be filled
+	GFX_THROW_INFO(_pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pVertexShader));
+	
+	// bind vertex shader
+	_pContext->VSSetShader(pVertexShader.Get(), nullptr, 0u);
+
+	// Issue draw calls from context pp
+	GFX_THROW_INFO_ONLY(_pContext->Draw((UINT)std::size(vertices), 0u));
+}
+
 // Graphics exception stuff
 
 SnGraphics::HrException::HrException(int line, const char* file, HRESULT hr, std::vector<std::string> infoMsgs) noexcept
@@ -170,4 +230,40 @@ std::string SnGraphics::HrException::GetErrorInfo() const noexcept
 const char* SnGraphics::DeviceRemovedException::GetType() const noexcept
 {
 	return "Sn Graphics Exception [Device Removed] (DXGI_ERROR_DEVICE_REMOVED)";
+}
+
+SnGraphics::InfoException::InfoException(int line, const char* file, std::vector<std::string> info /*= {}*/) noexcept
+	: Exception(line, file)
+{
+	// join all info messages with newlines into single string
+	for (const auto& m : info)
+	{
+		_info += m;
+		_info.push_back('\n');
+	}
+	// remove final newline if exists
+	if (!_info.empty())
+	{
+		_info.pop_back();
+	}
+}
+
+const char* SnGraphics::InfoException::what() const noexcept
+{
+	std::ostringstream oss;
+	oss << GetType() << std::endl
+		<< "\n[Error Info]\n" << GetErrorInfo() << std::endl << std::endl;
+	oss << GetOriginString();
+	_whatBuffer = oss.str();
+	return _whatBuffer.c_str();
+}
+
+const char* SnGraphics::InfoException::GetType() const noexcept
+{
+	return "SnGraphics Info Exception";
+}
+
+std::string SnGraphics::InfoException::GetErrorInfo() const noexcept
+{
+	return _info;
 }

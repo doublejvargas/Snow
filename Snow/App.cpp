@@ -23,6 +23,7 @@ void App::OnTick()
 {
 	const float c = sin(_timer.Peek()) / 2.f + .5f;
 	_wnd.Gfx().ClearBuffer(c, c, 1.f); //sin wave to animate ClearBuffer: oscillates from RGB white (1, 1, 1) to blue (0, 0, 1)
+	_wnd.Gfx().DrawTestTriangle();
 	_wnd.Gfx().EndFrame();
 }
 
