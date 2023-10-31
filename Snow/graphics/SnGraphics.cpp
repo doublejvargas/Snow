@@ -152,17 +152,68 @@ void SnGraphics::DrawTestTriangle()
 	// here we bind the vertex buffer to the pipeline
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
-	_pContext->IASetVertexBuffers(0u, 1u, &pVertexBuffer, &stride, &offset);
+	_pContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
+
+	// create pixel shader
+	wrl::ComPtr<ID3D11PixelShader> pPixelShader;
+	wrl::ComPtr<ID3DBlob> pBlob;
+	GFX_THROW_INFO(D3DReadFileToBlob(L"PixelShader.cso", &pBlob));
+	// parameters: const void* pShaderByteCode, size_t byteCodeLength, id3d11classlinkage pClassLinkage, pp to be filled
+	GFX_THROW_INFO(_pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pPixelShader));
+
+	// bind pixel shader
+	_pContext->PSSetShader(pPixelShader.Get(), nullptr, 0u);
 
 	// create vertex shader
 	wrl::ComPtr<ID3D11VertexShader> pVertexShader;
-	wrl::ComPtr<ID3DBlob> pBlob;
-	GFX_THROW_INFO(D3DReadFileToBlob(L"VertexShader.cso", &pBlob));
-	// parameters: const void* pShaderByteCode, size_t byteCodeLength, id3d11classlinkage pClassLinkage, pp to be filled
+	GFX_THROW_INFO(D3DReadFileToBlob(L"VertexShader.cso", &pBlob)); //note: this call &pBlob releases whatever blob is pointing to and fills it with something new.
 	GFX_THROW_INFO(_pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pVertexShader));
 	
 	// bind vertex shader
 	_pContext->VSSetShader(pVertexShader.Get(), nullptr, 0u);
+
+	// input (vertex) layout (2d positions only)
+	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
+	const D3D11_INPUT_ELEMENT_DESC ied[] =
+	{
+		/*semanticName: must match with the element name specified in vertex shader
+		  semanticIndex: the index (i.e., layout location) for the element, also must match with shader
+		  format: specifies the format of the data, for vertex positions this would be 2 32-bit floats (r32g32)
+		  input slot: "always 0" according to chili
+		  AlignedByteOffset: the offset from the beginning of vertex structure data to this specific element
+		  InputSlotClass: vertex vs index? for now we'll use vertex
+		  InstanceDataStepRate: we're not working with instances yet, so 0*/
+		{"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
+	};
+
+	GFX_THROW_INFO(_pDevice->CreateInputLayout(
+		ied,
+		(UINT)std::size(ied),
+		pBlob->GetBufferPointer(), // this function requires the shader bytecode to compare that the semantics specified in the layout match up
+		pBlob->GetBufferSize(),
+		&pInputLayout
+	));
+
+	// bind input layout
+	_pContext->IASetInputLayout(pInputLayout.Get());
+
+	// bind render target
+	_pContext->OMSetRenderTargets(1u, _pTargetView.GetAddressOf(), nullptr); // NOTE: we use GetAddressOf method here instead of & operator because we do not want to FREE contents of underlying raw pointer
+
+	// Set primitive topology to triangle list (groups of 3 vertices)
+	_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// configure viewport
+	D3D11_VIEWPORT vp;
+	vp.Width = 800;
+	vp.Height = 600;
+	vp.MinDepth = 0;
+	vp.MaxDepth = 1;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	// we don't need to create a COM d3d11 object, we can simply call the function on the pipeline with the structure above
+	// RS "rasterizer stage"
+	_pContext->RSSetViewports(1u, &vp);
 
 	// Issue draw calls from context pp
 	GFX_THROW_INFO_ONLY(_pContext->Draw((UINT)std::size(vertices), 0u));
