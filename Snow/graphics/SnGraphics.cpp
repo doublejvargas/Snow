@@ -112,7 +112,7 @@ void SnGraphics::ClearBuffer(float red, float green, float blue) noexcept
 	_pContext->ClearRenderTargetView(_pTargetView.Get(), color);
 }
 
-void SnGraphics::DrawTestTriangle()
+void SnGraphics::DrawTestTriangle(float angle)
 {
 	HRESULT hr;
 	namespace wrl = Microsoft::WRL;
@@ -197,6 +197,44 @@ void SnGraphics::DrawTestTriangle()
 
 	// bind index buffer
 	_pContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
+
+	// create constant buffer for transformation matrix
+	struct ConstantBuffer
+	{
+		struct  
+		{
+			float element[4][4];
+		} transformation;
+	};
+
+	const ConstantBuffer cb =
+	{
+		{
+			std::cos(angle),   std::sin(angle), .0f,   .0f,
+		   -std::sin(angle),   std::cos(angle), .0f,   .0f,
+			.0f,			   .0f,				1.f,   .0f,
+			.0f,			   .0f,				.0f,   1.f
+		}
+	};
+
+	wrl::ComPtr<ID3D11Buffer> pConstantBuffer;
+	D3D11_BUFFER_DESC cbd{};
+	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbd.Usage = D3D11_USAGE_DYNAMIC;
+	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbd.MiscFlags = 0u;
+	cbd.ByteWidth = sizeof(cb);
+	// this buffer is not an array as a vertex buffer is an array, so byte stride of "elements" doesn't apply here as it only contains 1 element.
+	cbd.StructureByteStride = 0u;
+	// the subresource data in the cpu (double float array 4x4 "matrix" in this case) to be passed to gpu memory
+	D3D11_SUBRESOURCE_DATA csd{};
+	csd.pSysMem = &cb;
+	GFX_THROW_INFO(_pDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer)); // the & operator for first 2 arguments ordinarily return references,
+	                                                                       //   the & operator for the 3rd argument is overloaded (COM object) and releases before returning
+																		   //   it's reference.
+	
+	// bind constant buffer to vertex shader
+	_pContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
 
 	// create pixel shader
 	wrl::ComPtr<ID3D11PixelShader> pPixelShader;
