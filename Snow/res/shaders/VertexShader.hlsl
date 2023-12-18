@@ -7,10 +7,7 @@ struct VSOut
 cbuffer CBuf
 {
     // the type here MUST match the type defined in the code (See func. DrawTestTriangle in SnGraphics.cpp)
-    // cpu defined arrays are naturally row major, but d3d uses column major logic by default,
-    // a simple fix is to specify that this constant buffer is row major by using the row_major keyword
-    // this will produce different computations specific to row major to keep the rendering consistent, but it is slightly slower than column major algorithms.
-    row_major matrix transform; // the keyword matrix indicates a 4x4 float (array). 
+    matrix transform; // the keyword matrix indicates a 4x4 float (array). 
 };
 
 VSOut main(float2 pos : Position, float3 color : Color)

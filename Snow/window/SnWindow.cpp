@@ -128,6 +128,16 @@ SnGraphics& SnWindow::Gfx()
 	return *_pGfx;
 }
 
+int SnWindow::GetWidth() const
+{
+	return _width;
+}
+
+int SnWindow::GetHeight() const
+{
+	return _height;
+}
+
 LRESULT WINAPI SnWindow::HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
 {
 	// use create parameter passed in from CreateWindowEx() to store class pointer

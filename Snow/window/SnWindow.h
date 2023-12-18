@@ -73,6 +73,9 @@ public:
 	static std::optional<int> ProcessMessages();
 
 	SnGraphics& Gfx();
+
+	int GetWidth() const;
+	int GetHeight() const;
 private:
 	static LRESULT WINAPI HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 	static LRESULT WINAPI HandleMsgThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;

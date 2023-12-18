@@ -3,11 +3,15 @@
 //lib
 #include "vendor/dxerr/dxerr.h"
 #include <d3dcompiler.h>
+#include <DirectXMath.h>
 
 // std
 #include <sstream>
 
+// name spaces for readability
 namespace wrl = Microsoft::WRL;
+namespace dx = DirectX;
+
 
 #pragma comment(lib, "d3d11.lib") // tell the linker which dll to link against for d3d stuff
 #pragma comment(lib, "D3DCompiler.lib") // used to compile HLSL shaders at runtime, but we'll use it to access shader loading functions 
@@ -112,7 +116,7 @@ void SnGraphics::ClearBuffer(float red, float green, float blue) noexcept
 	_pContext->ClearRenderTargetView(_pTargetView.Get(), color);
 }
 
-void SnGraphics::DrawTestTriangle(float angle)
+void SnGraphics::DrawTestTriangle(float angle, float x, float y)
 {
 	HRESULT hr;
 	namespace wrl = Microsoft::WRL;
@@ -201,19 +205,20 @@ void SnGraphics::DrawTestTriangle(float angle)
 	// create constant buffer for transformation matrix
 	struct ConstantBuffer
 	{
-		struct  
-		{
-			float element[4][4];
-		} transformation;
+		dx::XMMATRIX transform;
 	};
 
 	const ConstantBuffer cb =
 	{
+		// TODO (Recommended): Look thru windows documentation for DirectXMath.
+		// focus on XMMatrix and XMVectors and their memory alignment requirements in stack vs heap.
 		{
-			std::cos(angle),   std::sin(angle), .0f,   .0f,
-		   -std::sin(angle),   std::cos(angle), .0f,   .0f,
-			.0f,			   .0f,				1.f,   .0f,
-			.0f,			   .0f,				.0f,   1.f
+			// DirectX matrices are row major, so we transpose to give hlsl column major matrices for optimization.
+			dx::XMMatrixTranspose(
+				dx::XMMatrixRotationZ(angle) * // * operator is overloaded in the directx math library and works as right-multiplication
+				dx::XMMatrixScaling(3.0f / 4.0f, 1.0f, 1.0f) *
+				dx::XMMatrixTranslation(x, y, 0.0f)
+			)
 		}
 	};
 
