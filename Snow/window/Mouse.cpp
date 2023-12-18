@@ -41,7 +41,7 @@ Mouse::Event Mouse::Read() noexcept
 	}
 	else
 	{
-		return Mouse::Event();
+		return Mouse::Event(); // default constructor, basically an "invalid" event (see default constructor)
 	}
 }
 

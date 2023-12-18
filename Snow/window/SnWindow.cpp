@@ -71,7 +71,7 @@ SnWindow::SnWindow(int width, int height, LPCWSTR name)
 		nullptr,						// Parent window    
 		nullptr,						// Menu
 		SnWindowClass::GetInstance(),	// Instance handle
-		this							// Additional application data !! very important !! we're passing a pointer to our egine's class type to the win api side!
+		this							// Additional application data !! very important !! we're passing a pointer to our engine's window class type to the win api side!
 	);
 
 	if (_hWnd == nullptr)
@@ -79,7 +79,7 @@ SnWindow::SnWindow(int width, int height, LPCWSTR name)
 		throw SNHWND_LAST_EXCEPT();
 	}
 
-	// newly created windows start off as hidden
+	// newly created windows start off as hidden, explicitly command to show
 	ShowWindow(_hWnd, SW_SHOWNORMAL);
 	// create graphics object
 	_pGfx = std::make_unique<SnGraphics>(_hWnd);
@@ -153,7 +153,7 @@ LRESULT WINAPI SnWindow::HandleMsgThunk(HWND hWnd, UINT msg, WPARAM wParam, LPAR
 {
 	// retrieve ptr to SnWindow class
 	/* think of this as retrieving the LPVOID data at GWLP_USERDATA (the parameter to which we passed "this" -- an instance of SnWindow -- associated with hWnd,
-		then casting it to the appropriate type, that is a SnWindow. This is reinterpreting a 64bit void ptr to SnWindow ptr type. */
+		then casting it to the appropriate type, that is, a SnWindow. This is reinterpreting a 64bit void ptr to SnWindow ptr type. */
 	SnWindow* const pWnd = reinterpret_cast<SnWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 	// forward message to SnWindow class' handler
 	return pWnd->HandleMsg(hWnd, msg, wParam, lParam);
@@ -195,7 +195,7 @@ LRESULT SnWindow::HandleMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) n
 	/***************** MOUSE MESSAGES *****************/
 	case WM_MOUSEMOVE:
 	{
-		const POINTS pt = MAKEPOINTS(lParam);
+		const POINTS pt = MAKEPOINTS(lParam); // lParam seems to contain info about the x,y location of cursor on the screen
 		// in client region -> log move, and log enter + capture mouse
 		if (pt.x >= 0 && pt.x < _width && pt.y >= 0 && pt.y < _height)
 		{
@@ -227,7 +227,7 @@ LRESULT SnWindow::HandleMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) n
 	}
 	case WM_LBUTTONDOWN:
 	{
-		const POINTS pt = MAKEPOINTS(lParam);
+		const POINTS pt = MAKEPOINTS(lParam); // lParam seems to contain info about the x,y location of cursor on the screen
 		mouse.OnLeftPressed(pt.x, pt.y);
 		break;
 	}
