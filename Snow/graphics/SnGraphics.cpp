@@ -16,22 +16,8 @@ namespace dx = DirectX;
 #pragma comment(lib, "d3d11.lib") // tell the linker which dll to link against for d3d stuff
 #pragma comment(lib, "D3DCompiler.lib") // used to compile HLSL shaders at runtime, but we'll use it to access shader loading functions 
 
-// graphics exception checking/throwing macros (some with DXGI infos)
-#define GFX_EXCEPT_NOINFO(hr) SnGraphics::HrException(__LINE__, __FILE__, (hr))
-#define GFX_THROW_NOINFO(hrcall) if (FAILED(hr = (hrcall))) throw GFX_EXCEPT_NOINFO(hr)
-
-#ifndef NDEBUG
-#define GFX_EXCEPT(hr) SnGraphics::HrException(__LINE__, __FILE__, (hr), _infoManager.GetMessages())
-#define GFX_THROW_INFO(hrcall) _infoManager.Set(); if(FAILED(hr = (hrcall))) throw GFX_EXCEPT(hr)
-#define GFX_DEVICE_REMOVED_EXCEPT(hr) SnGraphics::DeviceRemovedException(__LINE__, __FILE__, (hr), _infoManager.GetMessages())
-#define GFX_THROW_INFO_ONLY(call) _infoManager.Set(); (call); {auto v = _infoManager.GetMessages(); if(!v.empty()) {throw SnGraphics::InfoException(__LINE__, __FILE__, v);}}
-#else
-#define GFX_EXCEPT(hr) GFX_EXCEPT_NOINFO(hr)
-#define GFX_THROW_INFO(hrcall) GFX_THROW_NOINFO(hrcall)
-#define GFX_DEVICE_REMOVED_EXCEPT(hr) SnGraphics::DeviceRemovedException(__LINE__, __FILE__, (hr))
-#define GFX_THROW_INFO_ONLY(call) (call)
-#endif
-
+// Exception macros
+#include "error/GraphicsThrowMacros.h"
 
 SnGraphics::SnGraphics(HWND hWnd)
 {

@@ -6,6 +6,9 @@
 // std
 #include <sstream>
 
+// exception macros
+#include "error/WindowsThrowMacros.h"
+
 // declare static instance of the class here too?
 SnWindow::SnWindowClass SnWindow::SnWindowClass::_snWndClass;
 
@@ -239,6 +242,7 @@ LRESULT SnWindow::HandleMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) n
 	{
 		const POINTS pt = MAKEPOINTS(lParam); // lParam seems to contain info about the x,y location of cursor on the screen
 		mouse.OnLeftPressed(pt.x, pt.y);
+		SetForegroundWindow(hWnd); // bring window to foreground on lclick inside client region
 		break;
 	}
 	case WM_RBUTTONDOWN:

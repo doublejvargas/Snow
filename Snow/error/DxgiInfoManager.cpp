@@ -9,7 +9,11 @@
 
 #pragma comment(lib, "dxguid.lib")
 
-#define GFX_THROW_NOINFO(hrcall) if (FAILED(hr = (hrcall))) throw SnGraphics::HrException(__LINE__, __FILE__, hr)
+// exception macros
+#include "error/GraphicsThrowMacros.h"
+#include "error/WindowsThrowMacros.h"
+
+//#define GFX_THROW_NOINFO(hrcall) if (FAILED(hr = (hrcall))) throw SnGraphics::HrException(__LINE__, __FILE__, hr)
 
 DxgiInfoManager::DxgiInfoManager()
 {
