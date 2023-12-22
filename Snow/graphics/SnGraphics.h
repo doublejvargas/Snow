@@ -7,12 +7,21 @@
 // lib
 #include <d3d11.h>
 #include <wrl.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include <memory.h>
+#include <random>
 
 // std
 #include <vector>
 
 class SnGraphics
 {
+
+	// design: classes which implement Bindable interface will have LIMITED access to SnGraphics' private methods/fields via protected methods
+	//   note: "friend" status is not inherited, so child classes only have access to what Bindable lets them have access to via protected methods.
+	friend class Bindable;
+
 public:
 	class Exception : public SnException
 	{
@@ -63,9 +72,13 @@ public:
 	
 	void EndFrame();
 	void ClearBuffer(float red, float green, float blue) noexcept;
+	void DrawIndexed(UINT count) noexcept(!IS_DEBUG);
+	void SetProjection(DirectX::FXMMATRIX proj) noexcept;
+	DirectX::XMMATRIX GetProjection() const noexcept;
 
-	void DrawTestTriangle(float angle, float x, float y);
 private:
+	DirectX::XMMATRIX _projection;
+
 #ifndef NDEBUG
 	DxgiInfoManager _infoManager{};
 #endif

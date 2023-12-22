@@ -115,6 +115,18 @@ SnGraphics::SnGraphics(HWND hWnd)
 
 	// bind depth stencil view to OM (output merger) in pipeline
 	_pContext->OMSetRenderTargets(1u, _pTargetView.GetAddressOf(), _pDSV.Get());
+
+	// configure viewport
+	D3D11_VIEWPORT vp{};
+	vp.Width = 800.0f;
+	vp.Height = 600.0f;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+	vp.TopLeftX = 0.0f;
+	vp.TopLeftY = 0.0f;
+	
+	// we don't need to create a COM d3d11 object, we can simply call the function on the pipeline and pass the structure above
+	_pContext->RSSetViewports(1u, &vp);  // RS "rasterizer stage"
 }
 
 void SnGraphics::EndFrame()
@@ -139,239 +151,24 @@ void SnGraphics::ClearBuffer(float red, float green, float blue) noexcept
 	_pContext->ClearDepthStencilView(_pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0u);
 }
 
-void SnGraphics::DrawTestTriangle(float angle, float x, float z)
+void SnGraphics::DrawIndexed(UINT count) noexcept(!IS_DEBUG)
 {
-	HRESULT hr;
-	namespace wrl = Microsoft::WRL;
-	// struct that represents a vertex that only contains positions
-	struct Vertex
-	{
-		struct  
-		{
-			float x;
-			float y;
-			float z;
-		} pos;
-	};
-	
-	// vertex positions data "subresource data" (2d triangle at center of screen)
-	const Vertex vertices[] = {
-		{ -1.0f,	-1.0f,		-1.0f },
-		{  1.0f,	-1.0f,		-1.0f },
-		{ -1.0f,	 1.0f,		-1.0f },
-		{  1.0f,	 1.0f,		-1.0f },
-		{ -1.0f,	-1.0f,		 1.0f },
-		{  1.0f,	-1.0f,		 1.0f },
-		{ -1.0f,	 1.0f,		 1.0f },
-		{  1.0f,	 1.0f,		 1.0f }
-
-	};
-
-	// COM object that represents our vertex buffer
-	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
-	// descriptor provides specifications for this buffer
-	D3D11_BUFFER_DESC vbd{};
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.Usage = D3D11_USAGE_DEFAULT;
-	vbd.MiscFlags = 0u;
-	vbd.ByteWidth = sizeof(vertices);
-	vbd.StructureByteStride = sizeof(Vertex);
-	
-	// another descriptor that intakes the vertex data
-	D3D11_SUBRESOURCE_DATA vsd{};
-	vsd.pSysMem = vertices;
-	
-	// the device allocates the resources, so we use it to create the buffer on the GPU side
-	GFX_THROW_INFO(_pDevice->CreateBuffer(&vbd, &vsd, &pVertexBuffer)); // don't forget to check for exceptions here
-
-	// the context handles the operations/function calls that we will make on the graphics pipeline
-	// here we bind the vertex buffer to the pipeline
-	const UINT stride = sizeof(Vertex);
-	const UINT offset = 0u;
-	_pContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
-
-	// create index buffer
-	const unsigned short indices[] =  // 16bit data structure
-	{
-		0,2,1,	2,3,1,
-		1,3,5,	3,7,5,
-		2,6,3,	3,6,7,
-		4,5,7,	4,7,6,
-		0,4,2,	2,4,6,
-		0,1,4,	1,5,4
-	};
-
-	// COM object that represents our index buffer
-	wrl::ComPtr<ID3D11Buffer> pIndexBuffer;
-	// descriptor provides specifications for this buffer
-	D3D11_BUFFER_DESC ibd{};
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.Usage = D3D11_USAGE_DEFAULT;
-	ibd.CPUAccessFlags = 0u;
-	ibd.MiscFlags = 0u;
-	ibd.ByteWidth = sizeof(indices);
-	ibd.StructureByteStride = sizeof(unsigned short);
-	
-	// another descriptor that intakes the index data
-	D3D11_SUBRESOURCE_DATA isd{};
-	isd.pSysMem = indices;
-
-	// the device allocates the resources, so we use it to create the buffer on the GPU side
-	GFX_THROW_INFO(_pDevice->CreateBuffer(&ibd, &isd, &pIndexBuffer)); // don't forget to check for exceptions here
-
-	// bind index buffer
-	_pContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
-
-	// create constant buffer for transformation matrix
-	struct ConstantBuffer
-	{
-		dx::XMMATRIX transform;
-	};
-
-	const ConstantBuffer cb =
-	{
-		// TODO (Recommended): Look thru windows documentation for DirectXMath.
-		// focus on XMMatrix and XMVectors and their memory alignment requirements in stack vs heap.
-		{
-			// DirectX matrices are row major, so we transpose to give hlsl column major matrices for optimization.
-			dx::XMMatrixTranspose(
-				dx::XMMatrixRotationZ(angle) * // * operator is overloaded in the directx math library and works as right-multiplication
-				dx::XMMatrixRotationX(angle) *
-				dx::XMMatrixTranslation(x, 0.0f, z + 4.0f) *
-				dx::XMMatrixPerspectiveLH(1.0f, 3.0f / 4.0f, 0.5f, 10.0f)
-			)
-		}
-	};
-
-	wrl::ComPtr<ID3D11Buffer> pConstantBuffer;
-	D3D11_BUFFER_DESC cbd{};
-	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbd.Usage = D3D11_USAGE_DYNAMIC;
-	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbd.MiscFlags = 0u;
-	cbd.ByteWidth = sizeof(cb);
-	// this buffer is not an array as a vertex buffer is an array, so byte stride of "elements" doesn't apply here as it only contains 1 element.
-	cbd.StructureByteStride = 0u;
-	// the subresource data in the cpu (double float array 4x4 "matrix" in this case) to be passed to gpu memory
-	D3D11_SUBRESOURCE_DATA csd{};
-	csd.pSysMem = &cb;
-	// the & operator for first 2 arguments ordinarily return references,
-	//   the & operator for the 3rd argument is overloaded (COM object) and releases before returning
-	//   it's reference.
-	GFX_THROW_INFO(_pDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer)); 
-	
-	// bind constant buffer to vertex shader
-	_pContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
-
-	// create another constant buffer for pixel shader colors
-	struct ConstantBuffer2
-	{
-		struct  
-		{
-			float r;
-			float g;
-			float b;
-			float a;
-		} face_colors[6];
-	};
-
-	const ConstantBuffer2 cb2 =
-	{
-		{
-			{1.0f, 0.0f, 1.0f},
-			{1.0f, 0.0f, 0.0f},
-			{0.0f, 1.0f, 0.0f},
-			{0.0f, 0.0f, 1.0f},
-			{1.0f, 1.0f, 0.0f},
-			{0.0f, 1.0f, 1.0f},
-		}
-	};
-
-	wrl::ComPtr<ID3D11Buffer> pConstantBuffer2;
-	D3D11_BUFFER_DESC cbd2{};
-	cbd2.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbd2.Usage = D3D11_USAGE_DYNAMIC;
-	cbd2.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbd2.MiscFlags = 0u;
-	cbd2.ByteWidth = sizeof(cb2);
-	// this buffer is not an array as a vertex buffer is an array, so byte stride of "elements" doesn't apply here as it only contains 1 element.
-	cbd2.StructureByteStride = 0u;
-	// the subresource data in the cpu (double float array 4x4 "matrix" in this case) to be passed to gpu memory
-	D3D11_SUBRESOURCE_DATA csd2{};
-	csd2.pSysMem = &cb2;
-	// the & operator for first 2 arguments ordinarily return references,
-	//   the & operator for the 3rd argument is overloaded (COM object) and releases before returning
-	//   it's reference.
-	GFX_THROW_INFO(_pDevice->CreateBuffer(&cbd2, &csd2, &pConstantBuffer2)); 
-
-	// bind color constant buffer to pixel shader
-	_pContext->PSSetConstantBuffers(0u, 1u, pConstantBuffer2.GetAddressOf());
-
-	// create pixel shader
-	wrl::ComPtr<ID3D11PixelShader> pPixelShader;
-	wrl::ComPtr<ID3DBlob> pBlob;
-	GFX_THROW_INFO(D3DReadFileToBlob(L"PixelShader.cso", &pBlob));
-	// parameters: const void* pShaderByteCode, size_t byteCodeLength, id3d11classlinkage pClassLinkage, pp to be filled
-	GFX_THROW_INFO(_pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pPixelShader));
-
-	// bind pixel shader
-	_pContext->PSSetShader(pPixelShader.Get(), nullptr, 0u);
-
-	// create vertex shader
-	wrl::ComPtr<ID3D11VertexShader> pVertexShader;
-	GFX_THROW_INFO(D3DReadFileToBlob(L"VertexShader.cso", &pBlob)); //note: this call &pBlob releases whatever blob is pointing to and fills it with something new.
-	GFX_THROW_INFO(_pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pVertexShader));
-	
-	// bind vertex shader
-	_pContext->VSSetShader(pVertexShader.Get(), nullptr, 0u);
-
-	// input (vertex) layout (2d positions only)
-	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
-	const D3D11_INPUT_ELEMENT_DESC ied[] =
-	{
-		/*semanticName: must match with the element name specified in vertex shader
-		  semanticIndex: the index (i.e., layout location) for the element, also must match with shader (TODO: REVIEW)
-		  format: specifies the format of the data, for vertex positions this would be 2 32-bit floats (r32g32)
-		  input slot: "always 0" according to chili
-		  AlignedByteOffset: the offset from the beginning of vertex structure data to this specific element
-		  InputSlotClass: vertex vs index? for now we'll use vertex
-		  InstanceDataStepRate: we're not working with instances yet, so 0*/
-		{"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
-	};
-
-	GFX_THROW_INFO(_pDevice->CreateInputLayout(
-		ied,
-		(UINT)std::size(ied),
-		pBlob->GetBufferPointer(), // this function requires the shader bytecode to compare that the semantics specified in the layout match up
-		pBlob->GetBufferSize(),
-		&pInputLayout
-	));
-
-	// bind input layout
-	_pContext->IASetInputLayout(pInputLayout.Get());
-
 	// binding the target view & depth stencil here again because double buffering swap effect flag
 	//  "DXGI_SWAP_EFFECT_FLIP_DISCARD" removes binds from pipeline on every frame/flip of buffers
 	//   See "swap effect" flag in swap chain descriptor in constructor.
 	_pContext->OMSetRenderTargets(1u, _pTargetView.GetAddressOf(), _pDSV.Get());
 
-	// Set primitive topology to triangle list (groups of 3 vertices)
-	_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	GFX_THROW_INFO_ONLY(_pContext->DrawIndexed(count, 0u, 0u));
+}
 
-	// configure viewport
-	D3D11_VIEWPORT vp;
-	vp.Width = 800;
-	vp.Height = 600;
-	vp.MinDepth = 0;
-	vp.MaxDepth = 1;
-	vp.TopLeftX = 0;
-	vp.TopLeftY = 0;
-	// we don't need to create a COM d3d11 object, we can simply call the function on the pipeline with the structure above
-	// RS "rasterizer stage"
-	_pContext->RSSetViewports(1u, &vp);
+void SnGraphics::SetProjection(DirectX::FXMMATRIX proj) noexcept
+{
+	_projection = proj;
+}
 
-	// Issue draw calls from context pp
-	GFX_THROW_INFO_ONLY(_pContext->DrawIndexed((UINT)std::size(indices), 0u, 0u));
+DirectX::XMMATRIX SnGraphics::GetProjection() const noexcept
+{
+	return _projection;
 }
 
 // Graphics exception stuff

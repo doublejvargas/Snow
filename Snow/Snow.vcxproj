@@ -110,7 +110,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;IS_DEBUG=true;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -129,7 +129,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;IS_DEBUG=false;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -146,6 +146,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="bindable\Bindable.cpp" />
+    <ClCompile Include="bindable\IndexBuffer.cpp" />
+    <ClCompile Include="bindable\InputLayout.cpp" />
+    <ClCompile Include="bindable\PixelShader.cpp" />
+    <ClCompile Include="bindable\Topology.cpp" />
+    <ClCompile Include="bindable\TransformCbuf.cpp" />
+    <ClCompile Include="bindable\VertexBuffer.cpp" />
+    <ClCompile Include="bindable\VertexShader.cpp" />
+    <ClCompile Include="drawable\Box.cpp" />
+    <ClCompile Include="drawable\Drawable.cpp" />
     <ClCompile Include="error\DxgiInfoManager.cpp" />
     <ClCompile Include="error\SnException.cpp" />
     <ClCompile Include="graphics\SnGraphics.cpp" />
@@ -158,6 +168,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="bindable\Bindable.h" />
+    <ClInclude Include="bindable\BindableBase.h" />
+    <ClInclude Include="bindable\ConstantBuffers.h" />
+    <ClInclude Include="bindable\IndexBuffer.h" />
+    <ClInclude Include="bindable\InputLayout.h" />
+    <ClInclude Include="bindable\PixelShader.h" />
+    <ClInclude Include="bindable\Topology.h" />
+    <ClInclude Include="bindable\TransformCbuf.h" />
+    <ClInclude Include="bindable\VertexBuffer.h" />
+    <ClInclude Include="bindable\VertexShader.h" />
+    <ClInclude Include="drawable\Box.h" />
+    <ClInclude Include="drawable\Drawable.h" />
     <ClInclude Include="error\DxgiInfoManager.h" />
     <ClInclude Include="error\GraphicsThrowMacros.h" />
     <ClInclude Include="error\SnException.h" />
