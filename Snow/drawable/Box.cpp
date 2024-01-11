@@ -22,88 +22,93 @@ Box::Box(SnGraphics& gfx,
 	_theta(adist(rng)),
 	_phi(adist(rng))
 {
-	struct Vertex
-	{
-		struct
+		if (!IsStaticInitialized()) // Because of this check, we are now initializing and calling all the D3D functions ONCE, as opposed to 80 times for 80 cubes.
 		{
-			float x;
-			float y;
-			float z;
-		} pos;
-	};
+			struct Vertex
+			{
+				struct
+				{
+					float x;
+					float y;
+					float z;
+				} pos;
+			};
 
-	const std::vector<Vertex> vertices =
-	{
-		{ -1.0f, -1.0f, -1.0f },
-		{  1.0f, -1.0f, -1.0f },
-		{ -1.0f,  1.0f, -1.0f },
-		{  1.0f,  1.0f, -1.0f },
-		{ -1.0f, -1.0f,	 1.0f },
-		{  1.0f, -1.0f,	 1.0f },
-		{ -1.0f,  1.0f,	 1.0f },
-		{  1.0f,  1.0f,	 1.0f },
-	};
+			const std::vector<Vertex> vertices =
+			{
+				{ -1.0f, -1.0f, -1.0f },
+				{  1.0f, -1.0f, -1.0f },
+				{ -1.0f,  1.0f, -1.0f },
+				{  1.0f,  1.0f, -1.0f },
+				{ -1.0f, -1.0f,	 1.0f },
+				{  1.0f, -1.0f,	 1.0f },
+				{ -1.0f,  1.0f,	 1.0f },
+				{  1.0f,  1.0f,	 1.0f },
+			};
+			AddStaticBind(std::make_unique<VertexBuffer>(gfx, vertices));
 
-	AddBind(std::make_unique<VertexBuffer>(gfx, vertices));
+			auto pvs = std::make_unique<VertexShader>(gfx, L"VertexShader.cso");
+			auto pvsbc = pvs->GetBytecode(); // this is the blob, it will be needed later for creating the input layout
+			AddStaticBind(std::move(pvs)); //TODO: look into how std::move works.
 
-	auto pvs = std::make_unique<VertexShader>(gfx, L"VertexShader.cso");
-	auto pvsbc = pvs->GetBytecode();	// this is the blob, it will be needed later for creating the input layout
-	AddBind(std::move(pvs)); //TODO: look into how std::move works.
+			AddStaticBind(std::make_unique<PixelShader>(gfx, L"PixelShader.cso"));
 
-	AddBind(std::make_unique<PixelShader>(gfx, L"PixelShader.cso"));
+			const std::vector<unsigned short> indices =
+			{
+				0,2,1, 2,3,1,
+				1,3,5, 3,7,5,
+				2,6,3, 3,6,7,
+				4,5,7, 4,7,6,
+				0,4,2, 2,4,6,
+				0,1,4, 1,5,4
+			};
+			AddStaticIndexBuffer(std::make_unique<IndexBuffer>(gfx, indices));
 
-	const std::vector<unsigned short> indices =
-	{
-		0,2,1, 2,3,1,
-		1,3,5, 3,7,5,
-		2,6,3, 3,6,7,
-		4,5,7, 4,7,6,
-		0,4,2, 2,4,6,
-		0,1,4, 1,5,4
-	};
+			struct ConstantBuffer2
+			{
+				struct
+				{
+					float r;
+					float g;
+					float b;
+					float a;
+				} face_colors[6];
+			};
 
-	AddIndexBuffer(std::make_unique<IndexBuffer>(gfx, indices));
+			const ConstantBuffer2 cb2 =
+			{
+				{
+					{ 1.0f,	 0.0f,	1.0f },
+					{ 1.0f,	 0.0f,	0.0f },
+					{ 0.0f,	 1.0f,	0.0f },
+					{ 0.0f,	 0.0f,	1.0f },
+					{ 1.0f,	 1.0f,	0.0f },
+					{ 0.0f,	 1.0f,	1.0f },
+				}
+			};
+			AddStaticBind(std::make_unique<PixelConstantBuffer<ConstantBuffer2>>(gfx, cb2));
 
-	struct ConstantBuffer2
-	{
-		struct
-		{
-			float r;
-			float g;
-			float b;
-			float a;
-		} face_colors[6];
-	};
+			const std::vector<D3D11_INPUT_ELEMENT_DESC> ied =
+			{
+				/*semanticName: must match with the element name specified in vertex shader
+				  semanticIndex: the index (i.e., layout location) for the element, also must match with shader (TODO: REVIEW)
+				  format: specifies the format of the data, for vertex positions this would be 2 32-bit floats (r32g32)
+				  input slot: "always 0" according to chili
+				  AlignedByteOffset: the offset from the beginning of vertex structure data to this specific element
+				  InputSlotClass: vertex vs index? for now we'll use vertex
+				  InstanceDataStepRate: we're not working with instances yet, so 0*/
+				{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+			};
+			AddStaticBind(std::make_unique<InputLayout>(gfx, ied, pvsbc)); // we create the input layout here with the blob from the vertex shader
 
-	const ConstantBuffer2 cb2 =
-	{
-		{
-			{ 1.0f,	 0.0f,	1.0f },
-			{ 1.0f,	 0.0f,	0.0f },
-			{ 0.0f,	 1.0f,	0.0f },
-			{ 0.0f,	 0.0f,	1.0f },
-			{ 1.0f,	 1.0f,	0.0f },
-			{ 0.0f,	 1.0f,	1.0f },
+			AddStaticBind(std::make_unique<Topology>(gfx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 		}
-	};
-	AddBind(std::make_unique<PixelConstantBuffer<ConstantBuffer2>>(gfx, cb2));
+		// if static bindables have been initialized by first box instance, set the index buffer pointer in each instance of
+		//   box from the pointer kept in the static bindables
+		else
+			SetIndexFromStatic(); 
 
-	const std::vector<D3D11_INPUT_ELEMENT_DESC> ied =
-	{
-		/*semanticName: must match with the element name specified in vertex shader
-		  semanticIndex: the index (i.e., layout location) for the element, also must match with shader (TODO: REVIEW)
-		  format: specifies the format of the data, for vertex positions this would be 2 32-bit floats (r32g32)
-		  input slot: "always 0" according to chili
-		  AlignedByteOffset: the offset from the beginning of vertex structure data to this specific element
-		  InputSlotClass: vertex vs index? for now we'll use vertex
-		  InstanceDataStepRate: we're not working with instances yet, so 0*/
-		{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
-	};
-
-	AddBind(std::make_unique<InputLayout>(gfx, ied, pvsbc)); // we create the input layout here with the blob from the vertex shader
-
-	AddBind(std::make_unique<Topology>(gfx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
-
+	// ** The only bindable that won't be static is the TRANSFORM, because every instance of BOX will have its own  transform ** 
 	AddBind(std::make_unique<TransformCbuf>(gfx, *this));
 }
 

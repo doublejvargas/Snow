@@ -10,8 +10,10 @@
 
 void Drawable::Draw(SnGraphics& gfx) const noexcept(!IS_DEBUG)
 {
-	for (auto& b : _binds)
-	{
+	for (auto& b : _binds) {
+		b->Bind(gfx);
+	}
+	for (auto& b : GetStaticBinds()) {
 		b->Bind(gfx);
 	}
 
@@ -24,7 +26,7 @@ void Drawable::AddBind(std::unique_ptr<Bindable> bind) noexcept(!IS_DEBUG)
 	_binds.push_back(std::move(bind));  //TODO: look into how std::move works
 }
 
-void Drawable::AddIndexBuffer(std::unique_ptr<IndexBuffer> ibuf) noexcept
+void Drawable::AddIndexBuffer(std::unique_ptr<IndexBuffer> ibuf) noexcept(!IS_DEBUG)
 {
 	assert("Attempting to add index buffer a second time" && _pIndexBuffer == nullptr);
 	_pIndexBuffer = ibuf.get();

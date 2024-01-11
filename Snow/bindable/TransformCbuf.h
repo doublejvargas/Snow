@@ -12,7 +12,9 @@ public:
 	void Bind(SnGraphics& gfx) noexcept override;
 
 private:
-	VertexConstantBuffer<DirectX::XMMATRIX> _vcbuf;  //composition
+	// Making the transform bindable as static means we only have 1 resource and each instance of a drawable will update this
+	// transform constant buffer with its transformation data each frame. This saves us memory space compared to having a transform buffer for each instance.
+	static std::unique_ptr<VertexConstantBuffer<DirectX::XMMATRIX>> _pVcbuf;  //composition
 
 	// reference to the "parent" drawable object which will contain the object's transformation matrix
 	//  which we can retrieve, and then use to build a vertex constant buffer (field above this one) and update

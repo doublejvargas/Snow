@@ -152,6 +152,9 @@
     <ClInclude Include="drawable\Box.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="drawable\DrawableBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Snow.rc">
