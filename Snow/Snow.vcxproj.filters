@@ -69,7 +69,7 @@
     <ClCompile Include="bindable\VertexShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="drawable\Box.cpp">
+    <ClCompile Include="drawable\primitives\Box.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="drawable\Drawable.cpp">
@@ -149,10 +149,31 @@
     <ClInclude Include="drawable\Drawable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="drawable\Box.h">
+    <ClInclude Include="drawable\primitives\Box.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="drawable\DrawableBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="drawable\primitives\Cube.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="drawable\primitives\Cone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="drawable\primitives\IndexedTriangleList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SnMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="drawable\primitives\Plane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="drawable\primitives\Prism.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="drawable\primitives\Sphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

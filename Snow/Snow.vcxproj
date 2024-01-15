@@ -154,7 +154,7 @@
     <ClCompile Include="bindable\TransformCbuf.cpp" />
     <ClCompile Include="bindable\VertexBuffer.cpp" />
     <ClCompile Include="bindable\VertexShader.cpp" />
-    <ClCompile Include="drawable\Box.cpp" />
+    <ClCompile Include="drawable\primitives\Box.cpp" />
     <ClCompile Include="drawable\Drawable.cpp" />
     <ClCompile Include="error\DxgiInfoManager.cpp" />
     <ClCompile Include="error\SnException.cpp" />
@@ -178,9 +178,16 @@
     <ClInclude Include="bindable\TransformCbuf.h" />
     <ClInclude Include="bindable\VertexBuffer.h" />
     <ClInclude Include="bindable\VertexShader.h" />
-    <ClInclude Include="drawable\Box.h" />
+    <ClInclude Include="drawable\primitives\Box.h" />
+    <ClInclude Include="drawable\primitives\Cone.h" />
+    <ClInclude Include="drawable\primitives\Cube.h" />
     <ClInclude Include="drawable\Drawable.h" />
     <ClInclude Include="drawable\DrawableBase.h" />
+    <ClInclude Include="drawable\primitives\IndexedTriangleList.h" />
+    <ClInclude Include="drawable\primitives\Plane.h" />
+    <ClInclude Include="drawable\primitives\Prism.h" />
+    <ClInclude Include="drawable\primitives\Sphere.h" />
+    <ClInclude Include="SnMath.h" />
     <ClInclude Include="error\DxgiInfoManager.h" />
     <ClInclude Include="error\GraphicsThrowMacros.h" />
     <ClInclude Include="error\SnException.h" />

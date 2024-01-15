@@ -5,5 +5,5 @@ cbuffer CBuf
 
 float4 main( uint tid : SV_PrimitiveID ) : SV_Target
 {
-    return face_colors[tid / 2]; // two triangles per cube face.
+    return face_colors[(tid / 2) % 6]; // two triangles per cube face.
 }
