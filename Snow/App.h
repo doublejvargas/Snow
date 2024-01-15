@@ -16,5 +16,6 @@ private:
 
 	SnWindow _wnd;
 	Timer _timer{};
-	std::vector<std::unique_ptr<class Box>> boxes;
+	std::vector<std::unique_ptr<class Drawable>> _drawables;
+	static constexpr size_t _nDrawables = 180;
 };

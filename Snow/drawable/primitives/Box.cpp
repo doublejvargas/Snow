@@ -1,7 +1,7 @@
 #include "bindable/BindableBase.h"
 
 #include "Box.h"
-#include "Sphere.h"
+#include "Cube.h"
 
 // exception macros
 #include "error/GraphicsThrowMacros.h"
@@ -11,7 +11,8 @@ Box::Box(SnGraphics& gfx,
 	std::uniform_real_distribution<float>& adist,
 	std::uniform_real_distribution<float>& ddist,
 	std::uniform_real_distribution<float>& odist,
-	std::uniform_real_distribution<float>& rdist)
+	std::uniform_real_distribution<float>& rdist,
+	std::uniform_real_distribution<float>& bdist)
 	:
 	_r(rdist(rng)),
 	_droll(ddist(rng)),
@@ -33,19 +34,18 @@ Box::Box(SnGraphics& gfx,
 			dx::XMFLOAT3 pos;
 		};
 
-		auto model = Sphere::Make<Vertex>();
-		model.Transform(dx::XMMatrixScaling(1.0f, 1.0f, 1.2f));
+		const auto model = Cube::Make<Vertex>();
 		AddStaticBind(std::make_unique<VertexBuffer>(gfx, model.vertices));
 
-		auto pvs = std::make_unique<VertexShader>(gfx, L"VertexShader.cso");
+		auto pvs = std::make_unique<VertexShader>(gfx, L"ColorIndexVS.cso");
 		auto pvsbc = pvs->GetBytecode(); // this is the blob, it will be needed later for creating the input layout
 		AddStaticBind(std::move(pvs)); //TODO: look into how std::move works.
 
-		AddStaticBind(std::make_unique<PixelShader>(gfx, L"PixelShader.cso"));
+		AddStaticBind(std::make_unique<PixelShader>(gfx, L"ColorIndexPS.cso"));
 
 		AddStaticIndexBuffer(std::make_unique<IndexBuffer>(gfx, model.indices));
 
-		struct ConstantBuffer2
+		struct PixelShaderConstants
 		{
 			struct
 			{
@@ -53,21 +53,23 @@ Box::Box(SnGraphics& gfx,
 				float g;
 				float b;
 				float a;
-			} face_colors[6];
+			} face_colors[8];
 		};
 
-		const ConstantBuffer2 cb2 =
+		const PixelShaderConstants cb2 =
 		{
 			{
-				{ 1.0f,	 0.0f,	1.0f },
-				{ 1.0f,	 0.0f,	0.0f },
-				{ 0.0f,	 1.0f,	0.0f },
-				{ 0.0f,	 0.0f,	1.0f },
-				{ 1.0f,	 1.0f,	0.0f },
-				{ 0.0f,	 1.0f,	1.0f },
+				{ 1.0f,	1.0f, 1.0f },
+				{ 1.0f,	0.0f, 0.0f },
+				{ 0.0f,	1.0f, 0.0f },
+				{ 1.0f,	1.0f, 0.0f },
+				{ 0.0f,	0.0f, 1.0f },
+				{ 1.0f,	0.0f, 1.0f },
+				{ 0.0f,	1.0f, 1.0f },
+				{ 0.0f,	0.0f, 0.0f }
 			}
 		};
-		AddStaticBind(std::make_unique<PixelConstantBuffer<ConstantBuffer2>>(gfx, cb2));
+		AddStaticBind(std::make_unique<PixelConstantBuffer<PixelShaderConstants>>(gfx, cb2));
 
 		const std::vector<D3D11_INPUT_ELEMENT_DESC> ied =
 		{
@@ -91,6 +93,12 @@ Box::Box(SnGraphics& gfx,
 
 	// ** The only bindable that won't be static is the TRANSFORM, because every instance of BOX will have its own  transform ** 
 	AddBind(std::make_unique<TransformCbuf>(gfx, *this));
+
+	// model deformation transform (per instance, not stored as bind)
+	dx::XMStoreFloat3x3(
+		&_mt,
+		dx::XMMatrixScaling(1.0f, 1.0f, bdist(rng))
+	);
 }
 
 void Box::Update(float dt) noexcept
@@ -105,8 +113,11 @@ void Box::Update(float dt) noexcept
 
 DirectX::XMMATRIX Box::GetTransformXM() const noexcept
 {
-	return DirectX::XMMatrixRotationRollPitchYaw(_pitch, _yaw, _roll) * // rotate about the box's center
+	namespace dx = DirectX;
+	return dx::XMLoadFloat3x3(&_mt) *									// scale the box
+		DirectX::XMMatrixRotationRollPitchYaw(_pitch, _yaw, _roll) *	// rotate about the box's center
 		DirectX::XMMatrixTranslation(_r, 0.0f, 0.0f) *					// translate box away from space's origin
 		DirectX::XMMatrixRotationRollPitchYaw(_theta, _phi, _chi) *		// rotate about the origin
 		DirectX::XMMatrixTranslation(0.0f, 0.0f, 20.0f);				// translate the box away from the camera for better visibility
+
 }

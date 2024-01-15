@@ -154,8 +154,10 @@
     <ClCompile Include="bindable\TransformCbuf.cpp" />
     <ClCompile Include="bindable\VertexBuffer.cpp" />
     <ClCompile Include="bindable\VertexShader.cpp" />
+    <ClCompile Include="drawable\Melon.cpp" />
     <ClCompile Include="drawable\primitives\Box.cpp" />
     <ClCompile Include="drawable\Drawable.cpp" />
+    <ClCompile Include="drawable\Pyramid.cpp" />
     <ClCompile Include="error\DxgiInfoManager.cpp" />
     <ClCompile Include="error\SnException.cpp" />
     <ClCompile Include="graphics\SnGraphics.cpp" />
@@ -184,9 +186,11 @@
     <ClInclude Include="drawable\Drawable.h" />
     <ClInclude Include="drawable\DrawableBase.h" />
     <ClInclude Include="drawable\primitives\IndexedTriangleList.h" />
+    <ClInclude Include="drawable\Melon.h" />
     <ClInclude Include="drawable\primitives\Plane.h" />
     <ClInclude Include="drawable\primitives\Prism.h" />
     <ClInclude Include="drawable\primitives\Sphere.h" />
+    <ClInclude Include="drawable\Pyramid.h" />
     <ClInclude Include="SnMath.h" />
     <ClInclude Include="error\DxgiInfoManager.h" />
     <ClInclude Include="error\GraphicsThrowMacros.h" />
@@ -213,6 +217,34 @@
     <None Include="vendor\dxerr\DXTrace.inl" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="res\shaders\ColorBlendPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="res\shaders\ColorBlendVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="res\shaders\ColorIndexPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="res\shaders\ColorIndexVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
     <FxCompile Include="res\shaders\PixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>

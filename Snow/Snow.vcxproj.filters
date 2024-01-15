@@ -75,6 +75,12 @@
     <ClCompile Include="drawable\Drawable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="drawable\Melon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="drawable\Pyramid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="window\light_Windows.h">
@@ -176,6 +182,12 @@
     <ClInclude Include="drawable\primitives\Sphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="drawable\Melon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="drawable\Pyramid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Snow.rc">
@@ -201,5 +213,9 @@
   <ItemGroup>
     <FxCompile Include="res\shaders\VertexShader.hlsl" />
     <FxCompile Include="res\shaders\PixelShader.hlsl" />
+    <FxCompile Include="res\shaders\ColorIndexVS.hlsl" />
+    <FxCompile Include="res\shaders\ColorBlendPS.hlsl" />
+    <FxCompile Include="res\shaders\ColorBlendVS.hlsl" />
+    <FxCompile Include="res\shaders\ColorIndexPS.hlsl" />
   </ItemGroup>
 </Project>
